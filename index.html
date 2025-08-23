@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Multas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .calculator-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .calculator-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .header-section {
+            background: var(--primary-color);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header-section h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .header-section p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+
+        .form-section {
+            padding: 40px;
+        }
+
+        .input-group-custom {
+            margin-bottom: 25px;
+        }
+
+        .input-group-custom label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .input-group-custom .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .input-group-custom .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .calculate-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .calculate-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .export-btn {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+
+        .export-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .result-section {
+            background: var(--light-bg);
+            padding: 40px;
+            display: none;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+        }
+
+        .result-amount {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--success-color);
+            margin: 20px 0;
+        }
+
+        .formula-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .formula-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .formula-section h4 {
+            color: var(--primary-color);
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .table-responsive {
+            margin: 20px 0;
+        }
+
+        .table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .table thead {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .table th, .table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+
+        .table tbody tr:nth-of-type(odd) {
+            background-color: rgba(0,0,0,.02);
+        }
+
+        .formula {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            text-align: center;
+            margin: 20px 0;
+            border: 2px solid #e0e0e0;
+            line-height: 1.8;
+        }
+
+        .formula .math-symbol {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .calculation-details {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+
+        .calculation-details .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .calculation-details .detail-item:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--success-color);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 2rem;
+            }
+            
+            .form-section, .result-section {
+                padding: 20px;
+            }
+            
+            .result-amount {
+                font-size: 2rem;
+            }
+            
+            .table {
+                font-size: 0.9rem;
+            }
+            
+            .table th, .table td {
+                padding: 8px 10px;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+
+            .export-btn {
+                margin-left: 0;
+                margin-top: 10px;
+                width: 100%;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .factor-weight {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: -5px;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner-border {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .peso-input {
+            width: 70px;
+            display: inline-block;
+            margin-left: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .alert-container {
+            margin-bottom: 20px;
+        }
+
+        .caratula-input {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .caratula-input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .peso-validation {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .peso-validation.valid {
+            color: var(--success-color);
+        }
+
+        .peso-validation.invalid {
+            color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="calculator-card">
+            <div class="header-section">
+                <h1><i class="bi bi-calculator"></i> Calculadora de Daño Punitivo, art. 52 bis ley 24.240</h1>
+                <p>Calcula el monto de multas según factores de evaluación</p>
+            </div>
+
+            <div class="form-section">
+                <div class="alert-container">
+                    <div id="pesoAlert" class="alert alert-danger" style="display: none;">
+                        <i class="bi bi-exclamation-triangle-fill"></i> La suma de los pesos debe ser exactamente 100%. Actualmente es <span id="pesoActual">0</span>%.
+                    </div>
+                </div>
+
+                <form id="calculatorForm">
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="empresa">Tamaño de la empresa</label>
+                                <div class="factor-weight">Define el tope máximo</div>
+                                <select class="form-select" id="empresa">
+                                    <option value="100">Pequeña (tope 100 canastas)</option>
+                                    <option value="750">Mediana (tope 750 canastas)</option>
+                                    <option value="2100">Grande (tope 2100 canastas)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="caratula">Carátula de la causa</label>
+                                <div class="factor-weight">(opcional)</div>
+                                <input type="text" class="caratula-input" id="caratula" placeholder="Ingrese el nombre de la causa si desea incluirlo en el PDF">
+                            </div>
+                        </div>
+                    </div>
+
+                      <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="gravedad">Gravedad subjetiva</label>
+                                <div class="factor-weight">
+                                    Ponderación: <input type="number" id="gravedadPeso" class="peso-input" value="20" min="0" max="100" step="0.1"> %
+                                </div>
+                                <select class="form-select" id="gravedad">
+                                    <option value="0.1">Leve</option>
+                                    <option value="0.5">Media</option>
+                                    <option value="1">Grave</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="politica">Política vs hecho aislado</label>
+                                <div class="factor-weight">
+                                    Ponderación: <input type="number" id="politicaPeso" class="peso-input" value="10" min="0" max="100" step="0.1"> %
+                                </div>
+                                <select class="form-select" id="politica">
+                                    <option value="0.1">Empleado único</option>
+                                    <option value="0.5">Grupo de empleados</option>
+                                    <option value="1">Política de la empresa</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="conductaPosterior">Conducta posterior</label>
+                                <div class="factor-weight">
+                                    Ponderación: <input type="number" id="conductaPosteriorPeso" class="peso-input" value="10" min="0" max="100" step="0.1"> %
+                                </div>
+                                <select class="form-select" id="conductaPosterior">
+                                    <option value="0.0">Colaborativa</option>
+                                    <option value="0.5">Errática</option>
+                                    <option value="1">Justificativa/Negatoria</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="antecedentes">Antecedentes</label>
+                                <div class="factor-weight">
+                                    Ponderación: <input type="number" id="antecedentesPeso" class="peso-input" value="10" min="0" max="100" step="0.1"> %
+                                </div>
+                                <select class="form-select" id="antecedentes">
+                                    <option value="0.0">No disponibles/No posee</option>
+                                    <option value="0.5">Algunos reconocidos</option>
+                                    <option value="1">Muchos</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="posicion">Posición de mercado</label>
+                                <div class="factor-weight">
+                                    Ponderación: <input type="number" id="posicionPeso" class="peso-input" value="10" min="0" max="100" step="0.1"> %
+                                </div>
+                                <select class="form-select" id="posicion">
+                                    <option value="0.0">Competencia</option>
+                                    <option value="0.5">Oligopolio</option>
+                                    <option value="1">Monopolio</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="derecho">Derecho afectado</label>
+                                <div class="factor-weight">
+                                    Ponderación: <input type="number" id="derechoPeso" class="peso-input" value="15" min="0" max="100" step="0.1"> %
+                                </div>
+                                <select class="form-select" id="derecho">
+                                    <option value="0.1">Leve</option>
+                                    <option value="0.5">Medio</option>
+                                    <option value="1">Grave</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="danio">Alcance del daño</label>
+                                <div class="factor-weight">
+                                    Ponderación: <input type="number" id="danioPeso" class="peso-input" value="10" min="0" max="100" step="0.1"> %
+                                </div>
+                                <select class="form-select" id="danio">
+                                    <option value="0.1">Caso puntual</option>
+                                    <option value="0.5">Grupo de usuarios</option>
+                                    <option value="1">Generalizado</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="input-group-custom">
+                                <label for="beneficio">Beneficio Obtenido</label>
+                                <div class="factor-weight">
+                                    Ponderación: <input type="number" id="beneficioPeso" class="peso-input" value="15" min="0" max="100" step="0.1"> %
+                                </div>
+                                <select class="form-select" id="beneficio">
+                                    <option value="0.0">Nulo</option>
+                                    <option value="0.1">Bajo</option>
+                                    <option value="0.5">Medio</option>
+                                    <option value="1">Alto</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="peso-validation" id="pesoValidation">
+                        Suma de pesos: <span id="pesoTotal">100</span>%
+                    </div>
+
+                    <div class="button-container">
+                        <button type="button" class="calculate-btn" onclick="calcular()">
+                            <i class="bi bi-calculator-fill"></i> Calcular Multa
+                        </button>
+                        <button type="button" class="export-btn" id="exportBtn" onclick="exportarPDF()" style="display: none;">
+                            <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <div class="result-card fade-in">
+                    <h3 class="mb-4">Monto de Multa Calculado</h3>
+                    <div class="result-amount" id="resultAmount">0 canastas</div>
+                    <p class="text-muted">Monto calculado según factores de evaluación</p>
+                    
+                    <div class="calculation-details" id="calculationDetails"></div>
+                </div>
+            </div>
+
+            <div class="formula-section">
+                <h3><i class="bi bi-file-earmark-text"></i> Metodología de Cálculo</h3>
+                
+                <h4>📊 Tabla de parámetros del cálculo</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Símbolo</th>
+                                <th>Nombre del factor</th>
+                                <th>Explicación breve</th>
+                                <th>Peso (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>GS</strong></td>
+                                <td>Gravedad subjetiva</td>
+                                <td>Evalúa la gravedad del hecho en términos cualitativos (leve, media, grave).</td>
+                                <td>20 %</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PH</strong></td>
+                                <td>Política vs. hecho aislado</td>
+                                <td>Conforme la cantidad de agentes involucrados.</td>
+                                <td>10 %</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CP</strong></td>
+                                <td>Conducta posterior</td>
+                                <td>Actitud del infractor luego del hecho (arrepentimiento, colaboración, reiteración).</td>
+                                <td>10 %</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AN</strong></td>
+                                <td>Antecedentes</td>
+                                <td>Antecedentes de infracciones similares.</td>
+                                <td>10 %</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PM</strong></td>
+                                <td>Posición de mercado</td>
+                                <td>Peso económico o de mercado del infractor.</td>
+                                <td>10 %</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DA</strong></td>
+                                <td>Derecho afectado</td>
+                                <td>Importancia del derecho vulnerado (ej. patrimonial, moral, salud).</td>
+                                <td>15 %</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AL</strong></td>
+                                <td>Alcance del daño</td>
+                                <td>Magnitud concreta del daño causado.</td>
+                                <td>10 %</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BO</strong></td>
+                                <td>Beneficio obtenido</td>
+                                <td>Beneficio obtenido como consecuencia de la infracción.</td>
+                                <td>15 %</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4>📐 Fórmula del cálculo</h4>
+                <div class="formula">
+                    Si cada factor se evalúa en una escala de 0 a 1, el puntaje ponderado se expresa como:
+                    <br><br>
+                    <span class="math-symbol">F = (0.20 × GS) + (0.10 × PH) + (0.10 × CP) + (0.10 × AN) + (0.10 × PM) + (0.15 × DA) + (0.10 × AL) + (0.15 × BO)</span>
+                    <br><br>
+                    donde <span class="math-symbol">0 ≤ F ≤ 1</span>
+                    <br><br>
+                    Y el monto final de la sanción (M) se obtiene aplicando el tope máximo (T):
+                    <br><br>
+                    <span class="math-symbol">M = F × T</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border text-primary me-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <span>Generando PDF...</span>
+        </div>
+    </div>
+
+    <script>
+        // Función para formatear números eliminando ceros innecesarios después de la coma
+        function formatNumber(num, maxDecimals = 2) {
+            // Convertir a string con el máximo de decimales
+            let str = num.toFixed(maxDecimals);
+            
+            // Si hay un punto decimal, eliminar los ceros innecesarios
+            if (str.includes('.')) {
+                str = str.replace(/\.?0+$/, '');
+            }
+            
+            // Reemplazar punto por coma para formato español
+            return str.replace('.', ',');
+        }
+
+        // Variable para almacenar los datos del cálculo actual
+        let datosCalculo = {};
+
+        // Función para validar la suma de pesos
+        function validarPesos() {
+            const gravedadPeso = parseFloat(document.getElementById("gravedadPeso").value) || 0;
+            const politicaPeso = parseFloat(document.getElementById("politicaPeso").value) || 0;
+            const conductaPosteriorPeso = parseFloat(document.getElementById("conductaPosteriorPeso").value) || 0;
+            const antecedentesPeso = parseFloat(document.getElementById("antecedentesPeso").value) || 0;
+            const posicionPeso = parseFloat(document.getElementById("posicionPeso").value) || 0;
+            const derechoPeso = parseFloat(document.getElementById("derechoPeso").value) || 0;
+            const danioPeso = parseFloat(document.getElementById("danioPeso").value) || 0;
+            const beneficioPeso = parseFloat(document.getElementById("beneficioPeso").value) || 0;
+
+            const suma = gravedadPeso + politicaPeso + conductaPosteriorPeso + antecedentesPeso + 
+                        posicionPeso + derechoPeso + danioPeso + beneficioPeso;
+
+            const pesoTotalElement = document.getElementById("pesoTotal");
+            const pesoValidationElement = document.getElementById("pesoValidation");
+            const pesoAlertElement = document.getElementById("pesoAlert");
+            const pesoActualElement = document.getElementById("pesoActual");
+
+            pesoTotalElement.textContent = formatNumber(suma, 1);
+            pesoActualElement.textContent = formatNumber(suma, 1);
+
+            // Verificar si la suma es 100% (con una pequeña tolerancia para decimales)
+            if (Math.abs(suma - 100) < 0.01) {
+                pesoValidationElement.className = "peso-validation valid";
+                pesoAlertElement.style.display = "none";
+                return true;
+            } else {
+                pesoValidationElement.className = "peso-validation invalid";
+                pesoAlertElement.style.display = "block";
+                return false;
+            }
+        }
+
+        // Agregar event listeners a los inputs de peso
+        document.addEventListener("DOMContentLoaded", function() {
+            const pesoInputs = document.querySelectorAll(".peso-input");
+            pesoInputs.forEach(input => {
+                input.addEventListener("input", validarPesos);
+            });
+            
+            // Validar pesos iniciales
+            validarPesos();
+        });
+
+        function calcular() {
+            // Validar que los pesos sumen 100%
+            if (!validarPesos()) {
+                return;
+            }
+
+            // pesos de los factores (ahora obtenidos de los inputs)
+            const pesos = {
+                gravedad: parseFloat(document.getElementById("gravedadPeso").value) / 100,
+                politica: parseFloat(document.getElementById("politicaPeso").value) / 100,
+                conductaPosterior: parseFloat(document.getElementById("conductaPosteriorPeso").value) / 100,
+                antecedentes: parseFloat(document.getElementById("antecedentesPeso").value) / 100,
+                posicion: parseFloat(document.getElementById("posicionPeso").value) / 100,
+                derecho: parseFloat(document.getElementById("derechoPeso").value) / 100,
+                danio: parseFloat(document.getElementById("danioPeso").value) / 100,
+                beneficio: parseFloat(document.getElementById("beneficioPeso").value) / 100
+            };
+
+            // valores seleccionados
+            const gravedad = parseFloat(document.getElementById("gravedad").value);
+            const politica = parseFloat(document.getElementById("politica").value);
+            const conductaPosterior = parseFloat(document.getElementById("conductaPosterior").value);
+            const antecedentes = parseFloat(document.getElementById("antecedentes").value);
+            const posicion = parseFloat(document.getElementById("posicion").value);
+            const derecho = parseFloat(document.getElementById("derecho").value);
+            const danio = parseFloat(document.getElementById("danio").value);
+            const beneficio = parseFloat(document.getElementById("beneficio").value);
+            const tope = parseFloat(document.getElementById("empresa").value);
+            const caratula = document.getElementById("caratula").value;
+
+            // cálculo del factor entre 0.1 y 1
+            const factor =
+                (gravedad * pesos.gravedad) +
+                (politica * pesos.politica) +
+                (conductaPosterior * pesos.conductaPosterior) +
+                (antecedentes * pesos.antecedentes) +
+                (posicion * pesos.posicion) +
+                (derecho * pesos.derecho) +
+                (danio * pesos.danio) +
+                (beneficio * pesos.beneficio);
+
+            // multa calculada directamente sobre el tope
+            const multa = factor * tope;
+
+            // Guardar datos para exportación
+            datosCalculo = {
+                gravedad: { valor: gravedad, peso: pesos.gravedad, nombre: 'Gravedad subjetiva', opcion: document.getElementById("gravedad").selectedOptions[0].text },
+                politica: { valor: politica, peso: pesos.politica, nombre: 'Política vs hecho aislado', opcion: document.getElementById("politica").selectedOptions[0].text },
+                conductaPosterior: { valor: conductaPosterior, peso: pesos.conductaPosterior, nombre: 'Conducta posterior', opcion: document.getElementById("conductaPosterior").selectedOptions[0].text },
+                antecedentes: { valor: antecedentes, peso: pesos.antecedentes, nombre: 'Antecedentes', opcion: document.getElementById("antecedentes").selectedOptions[0].text },
+                posicion: { valor: posicion, peso: pesos.posicion, nombre: 'Posición de mercado', opcion: document.getElementById("posicion").selectedOptions[0].text },
+                derecho: { valor: derecho, peso: pesos.derecho, nombre: 'Derecho afectado', opcion: document.getElementById("derecho").selectedOptions[0].text },
+                danio: { valor: danio, peso: pesos.danio, nombre: 'Alcance del daño', opcion: document.getElementById("danio").selectedOptions[0].text },
+                beneficio: { valor: beneficio, peso: pesos.beneficio, nombre: 'Beneficio obtenido', opcion: document.getElementById("beneficio").selectedOptions[0].text },
+                factor: factor,
+                multa: multa,
+                tope: tope,
+                empresa: document.getElementById("empresa").selectedOptions[0].text,
+                caratula: caratula
+            };
+
+            // Mostrar resultados
+            const resultSection = document.getElementById('resultSection');
+            const resultAmount = document.getElementById('resultAmount');
+            const calculationDetails = document.getElementById('calculationDetails');
+            const exportBtn = document.getElementById('exportBtn');
+
+            // Usar la función de formateo para mostrar el resultado sin ceros innecesarios
+            resultAmount.textContent = `${formatNumber(multa, 2)} canastas`;
+
+            // Mostrar detalles del cálculo
+            calculationDetails.innerHTML = `
+                <div class="detail-item">
+                    <span>Factor calculado (F):</span>
+                    <span>${formatNumber(factor, 4)}</span>
+                </div>
+                <div class="detail-item">
+                    <span>Tope máximo (T):</span>
+                    <span>${tope} canastas</span>
+                </div>
+                <div class="detail-item">
+                    <span>Multa final (M):</span>
+                    <span>${formatNumber(multa, 2)} canastas</span>
+                </div>
+            `;
+
+            resultSection.style.display = 'block';
+            exportBtn.style.display = 'inline-block';
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function exportarPDF() {
+            // Mostrar indicador de carga
+            document.getElementById('loading').classList.add('show');
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Configuración de fuentes
+                doc.setFont("helvetica");
+                
+                // Encabezado profesional
+                doc.setFontSize(20);
+                doc.setTextColor(44, 62, 80);
+                doc.text('DICTAMEN DE DAÑO PUNITIVO', 105, 20, { align: 'center' });
+                
+                // Subtítulo
+                doc.setFontSize(12);
+                doc.setTextColor(100, 100, 100);
+                doc.text('Cálculo de multa según factores de evaluación', 105, 30, { align: 'center' });
+                
+                // Fecha y hora
+                const fecha = new Date();
+                doc.setFontSize(10);
+                doc.text(`Fecha: ${fecha.toLocaleDateString('es-AR')} ${fecha.toLocaleTimeString('es-AR')}`, 105, 40, { align: 'center' });
+                
+                // Carátula de la causa (si se proporcionó)
+                if (datosCalculo.caratula && datosCalculo.caratula.trim() !== '') {
+                    doc.setFontSize(14);
+                    doc.setTextColor(44, 62, 80);
+                    doc.text(`Carátula: ${datosCalculo.caratula}`, 105, 50, { align: 'center' });
+                }
+                
+                // Línea separadora
+                doc.setDrawColor(52, 152, 219);
+                doc.setLineWidth(0.5);
+                const yPosLine = datosCalculo.caratula && datosCalculo.caratula.trim() !== '' ? 55 : 45;
+                doc.line(20, yPosLine, 190, yPosLine);
+                
+                // Resultado principal
+                doc.setFontSize(16);
+                doc.setTextColor(44, 62, 80);
+                doc.text('Resultado del Cálculo', 20, yPosLine + 15);
+                
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Factor Calculado (F): ${formatNumber(datosCalculo.factor, 4)}`, 20, yPosLine + 25);
+                doc.text(`Tope Máximo (T): ${datosCalculo.tope} canastas`, 20, yPosLine + 35);
+                doc.text(`Multa Final (M): ${formatNumber(datosCalculo.multa, 2)} canastas`, 20, yPosLine + 45);
+                
+                // Tabla de factores
+                doc.setFontSize(16);
+                doc.setTextColor(44, 62, 80);
+                doc.text('Detalle de Factores Aplicados', 20, yPosLine + 65);
+                
+                // Configuración de tabla
+                doc.autoTable({
+                    head: [['Factor', 'Opción Seleccionada', 'Valor', 'Ponderación', 'Contribución']],
+                    body: [
+                        [datosCalculo.gravedad.nombre, datosCalculo.gravedad.opcion, formatNumber(datosCalculo.gravedad.valor, 1), formatNumber(datosCalculo.gravedad.peso * 100, 1) + '%', formatNumber(datosCalculo.gravedad.valor * datosCalculo.gravedad.peso, 4)],
+                        [datosCalculo.politica.nombre, datosCalculo.politica.opcion, formatNumber(datosCalculo.politica.valor, 1), formatNumber(datosCalculo.politica.peso * 100, 1) + '%', formatNumber(datosCalculo.politica.valor * datosCalculo.politica.peso, 4)],
+                        [datosCalculo.conductaPosterior.nombre, datosCalculo.conductaPosterior.opcion, formatNumber(datosCalculo.conductaPosterior.valor, 1), formatNumber(datosCalculo.conductaPosterior.peso * 100, 1) + '%', formatNumber(datosCalculo.conductaPosterior.valor * datosCalculo.conductaPosterior.peso, 4)],
+                        [datosCalculo.antecedentes.nombre, datosCalculo.antecedentes.opcion, formatNumber(datosCalculo.antecedentes.valor, 1), formatNumber(datosCalculo.antecedentes.peso * 100, 1) + '%', formatNumber(datosCalculo.antecedentes.valor * datosCalculo.antecedentes.peso, 4)],
+                        [datosCalculo.posicion.nombre, datosCalculo.posicion.opcion, formatNumber(datosCalculo.posicion.valor, 1), formatNumber(datosCalculo.posicion.peso * 100, 1) + '%', formatNumber(datosCalculo.posicion.valor * datosCalculo.posicion.peso, 4)],
+                        [datosCalculo.derecho.nombre, datosCalculo.derecho.opcion, formatNumber(datosCalculo.derecho.valor, 1), formatNumber(datosCalculo.derecho.peso * 100, 1) + '%', formatNumber(datosCalculo.derecho.valor * datosCalculo.derecho.peso, 4)],
+                        [datosCalculo.danio.nombre, datosCalculo.danio.opcion, formatNumber(datosCalculo.danio.valor, 1), formatNumber(datosCalculo.danio.peso * 100, 1) + '%', formatNumber(datosCalculo.danio.valor * datosCalculo.danio.peso, 4)],
+                        [datosCalculo.beneficio.nombre, datosCalculo.beneficio.opcion, formatNumber(datosCalculo.beneficio.valor, 1), formatNumber(datosCalculo.beneficio.peso * 100, 1) + '%', formatNumber(datosCalculo.beneficio.valor * datosCalculo.beneficio.peso, 4)]
+                    ],
+                    startY: yPosLine + 75,
+                    styles: {
+                        fontSize: 10,
+                        cellPadding: 5
+                    },
+                    headStyles: {
+                        fillColor: [52, 152, 219],
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [245, 245, 245]
+                    }
+                });
+                
+                // Fórmula aplicada
+                doc.setFontSize(16);
+                doc.setTextColor(44, 62, 80);
+                doc.text('Fórmula Aplicada', 20, doc.lastAutoTable.finalY + 20);
+                
+                doc.setFontSize(9);
+                doc.setTextColor(0, 0, 0);
+                doc.text('F = (0.20 × GS) + (0.10 × PH) + (0.10 × CP) + (0.10 × AN) + (0.10 × PM) + (0.15 × DA) + (0.10 × AL) + (0.15 × BO)', 20, doc.lastAutoTable.finalY + 35);
+                doc.text('M = F × T              ', 20, doc.lastAutoTable.finalY + 45);
+         
+                
+                // Pie de página
+                
+                // Guardar el PDF
+                doc.save(`dictamen_dano_punitivo_${fecha.getTime()}.pdf`);
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                alert('Error al generar el PDF. Por favor, intente nuevamente.');
+            } finally {
+                // Ocultar indicador de carga
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+    </script>
+</body>
+</html>
